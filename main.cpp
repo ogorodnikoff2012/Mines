@@ -254,12 +254,12 @@ int main()
                 attron(COLOR_PAIR(color_type));
                 if (inArea && highlight_area)
                 {
-                    attron(A_ITALIC | A_BOLD);
+                    attron(A_BOLD);
                 }
                 addch(c);
                 if (inArea && highlight_area)
                 {
-                    attroff(A_ITALIC | A_BOLD);
+                    attroff(A_BOLD);
                 }
                 attroff(COLOR_PAIR(color_type));
             }       
