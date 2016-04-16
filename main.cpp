@@ -89,7 +89,7 @@ bool isInArea(int x1, int y1, int x2, int y2)
     return max(dx, dy) == 1;
 }
 
-void solve(Game &game, int w, int h, int m)
+void solve(Game &game, int w, int h, int)
 {
     for (int i = 0;  i < w; i++)
     {

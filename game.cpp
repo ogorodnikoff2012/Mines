@@ -41,7 +41,7 @@ int Game::neighbors(int x, int y) const
             {
                 continue;
             }
-            if (x0 >= 0 && y0 >= 0 && x0 < mines.size() && y0 < mines[x0].size())
+            if (x0 >= 0 && y0 >= 0 && x0 < (int)mines.size() && y0 < (int)mines[x0].size())
             {
                 if (mines[x0][y0])
                 {
@@ -88,7 +88,7 @@ char Game::cell(int x, int y) const
 
 void Game::open(int x, int y)
 {
-    if (x < 0 || y < 0 || x >= mines.size() || y >= mines[0].size())
+    if (x < 0 || y < 0 || x >= (int)mines.size() || y >= (int)mines[0].size())
     {
         return;
     }
@@ -164,7 +164,7 @@ int Game::flagsLeft() const
 
 bool Game::win() const
 {
-    return !lost && ((opened + numOfMines) == mines.size() * mines[0].size());
+    return !lost && ((opened + numOfMines) == (int)mines.size() * (int)mines[0].size());
 }
 
 bool Game::lose() const
