@@ -67,7 +67,7 @@ Trie *link(Trie *t)
     return t->suflink;
 }
 
-Trie *superlink(Trie *t)
+Trie *superLink(Trie *t)
 {
     if (!t->parent)
     {
@@ -81,7 +81,7 @@ Trie *superlink(Trie *t)
         }
         else
         {
-            t->superlink = superlink(link(t));
+            t->superlink = superLink(link(t));
         }
     }
     return t->superlink;
@@ -96,7 +96,7 @@ vector<int> terminals(Trie *t)
         {
             ans.push_back(t->terminal);
         }
-        t = superlink(t);
+        t = superLink(t);
     }
     return ans;
 }
