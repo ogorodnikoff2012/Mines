@@ -1,6 +1,10 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.2)
 project(Mines)
-find_package(Curses REQUIRED)
+#find_package(Curses REQUIRED)
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+include("./load_ncurses.cmake")
 
 include_directories(${CURSES_INCLUDE_DIR})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wshadow -O2 -std=c++11")

@@ -6,8 +6,9 @@
 
 using namespace std;
 
-const int NORMAL = 0, SELECTED = 1, BOMB = 2, WIN = 3, FLAG = 4, 
-      FLAG_SELECTED = 5, GODMODE_BOMB = 6, BORDER = 7, DIGIT = 8, SELECTED_DIGIT = 9;
+const int NORMAL = 0, SELECTED = 1, BOMB = 2, WIN = 3, FLAG = 4,
+      FLAG_SELECTED = 5, GODMODE_BOMB = 6, BORDER = 7, DIGIT = 8, SELECTED_DIGIT = 9,
+      QUESTION_MARK_SELECTED = 10, QUESTION_MARK = 11;
 
 int getGameLevel()
 {
@@ -21,7 +22,7 @@ int getGameLevel()
             HARD_WIDTH, HARD_HEIGHT, HARD_MINES);
     move(0, 0);
     printw("Choose difficulty level: ");
-    do 
+    do
     {
         int c = getch();
         if (c >= '1' && c <= '3')
@@ -41,7 +42,7 @@ int rows(int level)
             return EASY_HEIGHT;
         case 2:
             return MIDDLE_HEIGHT;
-        case 3: 
+        case 3:
             return HARD_HEIGHT;
         default:
             return 0;
@@ -56,7 +57,7 @@ int cols(int level)
             return EASY_WIDTH;
         case 2:
             return MIDDLE_WIDTH;
-        case 3: 
+        case 3:
             return HARD_WIDTH;
         default:
             return 0;
@@ -71,7 +72,7 @@ int mines(int level)
             return EASY_MINES;
         case 2:
             return MIDDLE_MINES;
-        case 3: 
+        case 3:
             return HARD_MINES;
         default:
             return 0;
@@ -125,7 +126,7 @@ int main()
 
     clear();
 
-    init_pair(NORMAL, COLOR_WHITE, COLOR_BLACK); 
+    init_pair(NORMAL, COLOR_WHITE, COLOR_BLACK);
     init_pair(SELECTED, COLOR_BLACK, COLOR_WHITE);
     init_pair(BOMB, COLOR_RED, COLOR_RED);
     init_pair(WIN, COLOR_YELLOW, COLOR_BLACK);
@@ -135,6 +136,8 @@ int main()
     init_pair(BORDER, COLOR_CYAN, COLOR_BLACK);
     init_pair(DIGIT, COLOR_MAGENTA, COLOR_BLACK);
     init_pair(SELECTED_DIGIT, COLOR_BLACK, COLOR_MAGENTA);
+    init_pair(QUESTION_MARK_SELECTED, COLOR_BLACK, COLOR_YELLOW);
+    init_pair(QUESTION_MARK, COLOR_YELLOW, COLOR_BLACK);
 
     bool first_loop = true;
 
@@ -238,6 +241,10 @@ int main()
                 {
                     color_type = BOMB;
                 }
+                if (c == '?')
+                {
+                    color_type = (selected ? QUESTION_MARK_SELECTED : QUESTION_MARK);
+                }
                 if (game.win())
                 {
                     color_type = WIN;
@@ -262,7 +269,7 @@ int main()
                     attroff(A_BOLD);
                 }
                 attroff(COLOR_PAIR(color_type));
-            }       
+            }
             attron(COLOR_PAIR(BORDER));
             addch('|');
             attroff(COLOR_PAIR(BORDER));

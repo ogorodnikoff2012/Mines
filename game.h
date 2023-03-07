@@ -15,8 +15,11 @@ class Game
         std::vector<std::vector<GameState>> state;
         int neighbors(int x, int y) const;
         bool lost;
+        bool minesInstalled;
         int flags, opened, numOfMines;
         static GameState nextState(GameState st);
+
+        void installMines(int x, int y);
     public:
         Game(int rows, int cols, int mines);
 //        Game(const char *filename);
@@ -30,4 +33,4 @@ class Game
         bool isBomb(int x, int y) const;
 };
 
-#endif//__XENON_MINES_GAME_H__ 
+#endif//__XENON_MINES_GAME_H__

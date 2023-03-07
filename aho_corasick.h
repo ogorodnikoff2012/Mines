@@ -13,9 +13,9 @@ struct Trie
     Trie() :
         from(0),
         terminal(0),
-        parent(NULL),
-        suflink(NULL),
-        superlink(NULL)
+        parent(nullptr),
+        suflink(nullptr),
+        superlink(nullptr)
     {}
 };
 

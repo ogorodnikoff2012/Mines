@@ -13,7 +13,7 @@ int insert(Trie *t, const char *s)
     {
         char ch = *s;
         auto it = t->children.find(ch);
-        Trie *next = NULL;
+        Trie *next = nullptr;
         if (it == t->children.end())
         {
             next = new Trie;
@@ -71,7 +71,7 @@ Trie *superLink(Trie *t)
 {
     if (!t->parent)
     {
-        return NULL;
+        return nullptr;
     }
     if (!t->superlink)
     {
