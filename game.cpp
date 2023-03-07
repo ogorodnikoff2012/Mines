@@ -123,14 +123,14 @@ void Game::changeState(int x, int y) {
 
 GameState Game::nextState(GameState st) {
     switch (st) {
-        case CLOSED:
-            return MARKED;
-        case MARKED:
-            return MAYBE;
-        case MAYBE:
-            return CLOSED;
-        default:
-            return OPENED;
+    case CLOSED:
+        return MARKED;
+    case MARKED:
+        return MAYBE;
+    case MAYBE:
+        return CLOSED;
+    default:
+        return OPENED;
     }
 }
 
