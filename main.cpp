@@ -8,9 +8,14 @@
 
 using namespace std;
 
-const int NORMAL = 0, SELECTED = 1, BOMB = 2, WIN = 3, FLAG = 4,
-          FLAG_SELECTED = 5, GODMODE_BOMB = 6, BORDER = 7, DIGIT = 8,
-          SELECTED_DIGIT = 9, QUESTION_MARK_SELECTED = 10, QUESTION_MARK = 11;
+const int NORMAL = 0;
+const int BOMB = 1;
+const int WIN = 2;
+const int FLAG = 3;
+const int GODMODE_BOMB = 4;
+const int BORDER = 5;
+const int DIGIT = 6;
+const int QUESTION_MARK = 7;
 
 using AsyncTask = std::function<void()>;
 
@@ -26,6 +31,9 @@ int getGameLevel() {
     printw("Choose difficulty level: ");
     do {
         int c = getch();
+        if (c == 'q') {
+            return -1;
+        }
         if (c >= '1' && c <= '3') {
             level = c - '0';
         }
@@ -91,10 +99,14 @@ void solve(Game& game, int w, int h, int) {
 
 class ShortcutTask {
   public:
-    ShortcutTask(int x, int y, Game* game, std::queue<AsyncTask>* taskQueue)
-        : x0(x), y0(y), game(game), taskQueue(taskQueue) {}
+    ShortcutTask(int x, int y, int creationEpoch, int* epoch, Game* game, std::queue<AsyncTask>* taskQueue)
+        : x0(x), y0(y), creationEpoch(creationEpoch), epoch(epoch), game(game), taskQueue(taskQueue) {}
 
     void operator()() const {
+        if (creationEpoch != *epoch) {
+            return;
+        }
+
         int width = game->width();
         int height = game->height();
 
@@ -119,13 +131,15 @@ class ShortcutTask {
         }
 
         if (hasChanges) {
-            taskQueue->push(ShortcutTask(x, y, game, taskQueue));
+            taskQueue->push(ShortcutTask(x, y, creationEpoch, epoch, game, taskQueue));
         }
     }
 
   private:
     int x0;
     int y0;
+    int creationEpoch;
+    int* epoch;
     Game* game;
     std::queue<AsyncTask>* taskQueue;
 };
@@ -136,8 +150,14 @@ int main() {
     noecho();
     start_color();
     halfdelay(1);
+    curs_set(2);
 
     int level = getGameLevel();
+
+    if (level < 0) {
+        endwin();
+        return 0;
+    }
 
     int width = cols(level);
     int height = rows(level);
@@ -145,6 +165,7 @@ int main() {
 
     Game game(height, width, flags);
 
+    int epoch = 0;
     int cur_x = 0, cur_y = 0;
     bool q_pressed = false;
     bool godmode = false;
@@ -153,16 +174,12 @@ int main() {
     clear();
 
     init_pair(NORMAL, COLOR_WHITE, COLOR_BLACK);
-    init_pair(SELECTED, COLOR_BLACK, COLOR_WHITE);
     init_pair(BOMB, COLOR_RED, COLOR_RED);
     init_pair(WIN, COLOR_YELLOW, COLOR_BLACK);
     init_pair(FLAG, COLOR_GREEN, COLOR_BLACK);
-    init_pair(FLAG_SELECTED, COLOR_BLACK, COLOR_GREEN);
-    init_pair(GODMODE_BOMB, COLOR_BLACK, COLOR_RED);
+    init_pair(GODMODE_BOMB, COLOR_RED, COLOR_BLACK);
     init_pair(BORDER, COLOR_CYAN, COLOR_BLACK);
     init_pair(DIGIT, COLOR_MAGENTA, COLOR_BLACK);
-    init_pair(SELECTED_DIGIT, COLOR_BLACK, COLOR_MAGENTA);
-    init_pair(QUESTION_MARK_SELECTED, COLOR_BLACK, COLOR_YELLOW);
     init_pair(QUESTION_MARK, COLOR_YELLOW, COLOR_BLACK);
 
     bool first_loop = true;
@@ -200,13 +217,16 @@ int main() {
             cur_y++;
             break;
         case ' ':
+            ++epoch;
             game.open(cur_x, cur_y);
             break;
         case '!':
+            ++epoch;
             game.shortcut(cur_x, cur_y);
             break;
         case 'F':
         case 'f':
+            ++epoch;
             game.changeState(cur_x, cur_y);
             break;
         case 'Q':
@@ -226,7 +246,7 @@ int main() {
                         solve(game, width, height, flags);
                     } else if (code == shortcut_idx) {
                         async_tasks.push(
-                            ShortcutTask(cur_x, cur_y, &game, &async_tasks));
+                            ShortcutTask(cur_x, cur_y, epoch, &epoch, &game, &async_tasks));
                     } else if (code == hint_idx) {
                         if (game.isBomb(cur_x, cur_y)) {
                             while (game.cell(cur_x, cur_y) != 'F') {
@@ -243,7 +263,7 @@ int main() {
         cur_x = max(0, min(cur_x, width - 1));
         cur_y = max(0, min(cur_y, height - 1));
 
-        clear();
+        // clear();
 
         attron(COLOR_PAIR(BORDER));
         move(0, 0);
@@ -268,23 +288,22 @@ int main() {
             attroff(COLOR_PAIR(BORDER));
             for (int x = 0; x < width; x++) {
                 bool selected = (x == cur_x && y == cur_y);
-                int color_type = selected ? SELECTED : NORMAL;
+                int color_type = NORMAL;
                 char c = game.cell(x, y);
                 if (c == 'F') {
-                    color_type = (selected ? FLAG_SELECTED : FLAG);
+                    color_type = FLAG;
                 }
                 if (c == 'B') {
                     color_type = BOMB;
                 }
                 if (c == '?') {
-                    color_type =
-                        (selected ? QUESTION_MARK_SELECTED : QUESTION_MARK);
+                    color_type = QUESTION_MARK;
                 }
                 if (game.win()) {
                     color_type = WIN;
                 }
                 if (c <= '9' && '0' <= c) {
-                    color_type = selected ? SELECTED_DIGIT : DIGIT;
+                    color_type = DIGIT;
                 }
                 if (selected && godmode && game.isBomb(x, y)) {
                     color_type = GODMODE_BOMB;
@@ -306,7 +325,9 @@ int main() {
         }
 
         move(height + 2, 0);
-        printw("Flags left: %d/%d", game.flagsLeft(), flags);
+        printw("Flags left: %d/%d     ", game.flagsLeft(), flags);
+
+        move(cur_y + 1, cur_x + 1);
 
         refresh();
     }
@@ -326,7 +347,8 @@ int main() {
     }
 
     if (!q_pressed) {
-        while (getch() < 0) {}
+        while (getch() < 0) {
+        }
     }
     endwin();
     return 0;
