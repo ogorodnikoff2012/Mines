@@ -12,3 +12,8 @@ mkdir build && cd build
 cmake <path/to/project/dir>
 make
 ```
+
+Screenshots
+---
+
+![](./screenshot.png)

@@ -23,11 +23,14 @@ class Game {
     //        void save(const char *filename) const;
     char cell(int x, int y) const;
     void open(int x, int y);
+    bool shortcut(int x, int y);
     void changeState(int x, int y);
     int flagsLeft() const;
     bool win() const;
     bool lose() const;
     bool isBomb(int x, int y) const;
+    int width() const;
+    int height() const;
 };
 
 #endif //__XENON_MINES_GAME_H__

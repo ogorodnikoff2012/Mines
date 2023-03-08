@@ -1,1 +1,1 @@
-Mines v.0.4 by Xenon aka Vladimir Ogorodnikov, 2016
+Mines v0.0.5 by Xenon aka Vladimir Ogorodnikov, 2016-2023

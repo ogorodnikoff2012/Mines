@@ -17,17 +17,17 @@
 
 #else
 
-#define EASY_WIDTH 10
+#define EASY_WIDTH 40
 #define EASY_HEIGHT 10
-#define EASY_MINES 10
+#define EASY_MINES 40
 
-#define MIDDLE_WIDTH 20
+#define MIDDLE_WIDTH 80
 #define MIDDLE_HEIGHT 20
-#define MIDDLE_MINES 40
+#define MIDDLE_MINES 160
 
-#define HARD_WIDTH 40
-#define HARD_HEIGHT 40
-#define HARD_MINES 160
+#define HARD_WIDTH 120
+#define HARD_HEIGHT 30
+#define HARD_MINES 360
 
 #endif
 

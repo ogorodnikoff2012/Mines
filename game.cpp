@@ -105,6 +105,99 @@ void Game::open(int x, int y) {
     }
 }
 
+bool Game::shortcut(int x, int y) {
+    if (state[x][y] != OPENED) {
+        return false;
+    }
+    int neighbors = 0;
+    int flaggedNeighbors = 0;
+    int openNeighbors = 0;
+    int minesCount = 0;
+
+    for (int dx = -1; dx <= 1; ++dx) {
+        for (int dy = -1; dy <= 1; ++dy) {
+            if (dx == 0 && dy == 0) {
+                continue;
+            }
+
+            int nx = x + dx;
+            int ny = y + dy;
+
+            if (nx < 0 || nx >= width() || ny < 0 || ny >= height()) {
+                continue;
+            }
+
+            ++neighbors;
+            switch (state[nx][ny]) {
+            case OPENED:
+                ++openNeighbors;
+                break;
+            case MARKED:
+                ++flaggedNeighbors;
+                break;
+            default:
+                // Do nothing.
+                break;
+            }
+
+            if (mines[nx][ny]) {
+                ++minesCount;
+            }
+        }
+    }
+
+    // 1. If current cell is open and number of flagged neighbors is equal to
+    // number of mines, open all non-flagged neighbors
+    // 2. Else if number of closed neighbors is equal to number of mines, flag
+    // all closed neighbors
+    bool isSomethingChanged = false;
+    if (flaggedNeighbors == minesCount) {
+        for (int dx = -1; dx <= 1; ++dx) {
+            for (int dy = -1; dy <= 1; ++dy) {
+                if (dx == 0 && dy == 0) {
+                    continue;
+                }
+
+                int nx = x + dx;
+                int ny = y + dy;
+
+                if (nx < 0 || nx >= width() || ny < 0 || ny >= height()) {
+                    continue;
+                }
+
+                if (state[nx][ny] != MARKED && state[nx][ny] != OPENED) {
+                    isSomethingChanged = true;
+                    open(nx, ny);
+                }
+            }
+        }
+    } else if (neighbors - openNeighbors == minesCount) {
+        for (int dx = -1; dx <= 1; ++dx) {
+            for (int dy = -1; dy <= 1; ++dy) {
+                if (dx == 0 && dy == 0) {
+                    continue;
+                }
+
+                int nx = x + dx;
+                int ny = y + dy;
+
+                if (nx < 0 || nx >= width() || ny < 0 || ny >= height()) {
+                    continue;
+                }
+
+                if (state[nx][ny] != OPENED) {
+                    while (state[nx][ny] != MARKED) {
+                        isSomethingChanged = true;
+                        changeState(nx, ny);
+                    }
+                }
+            }
+        }
+    }
+
+    return isSomethingChanged;
+}
+
 void Game::changeState(int x, int y) {
     GameState curSt = state[x][y];
     GameState nextSt = nextState(curSt);
@@ -144,3 +237,7 @@ bool Game::win() const {
 bool Game::lose() const { return lost; }
 
 bool Game::isBomb(int x, int y) const { return mines[x][y]; }
+
+int Game::width() const { return state.size(); }
+
+int Game::height() const { return state[0].size(); }

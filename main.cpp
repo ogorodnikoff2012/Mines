@@ -1,7 +1,9 @@
 #include "aho_corasick.h"
 #include "const.h"
 #include "game.h"
+#include <functional>
 #include <ncurses.h>
+#include <queue>
 #include <vector>
 
 using namespace std;
@@ -9,6 +11,8 @@ using namespace std;
 const int NORMAL = 0, SELECTED = 1, BOMB = 2, WIN = 3, FLAG = 4,
           FLAG_SELECTED = 5, GODMODE_BOMB = 6, BORDER = 7, DIGIT = 8,
           SELECTED_DIGIT = 9, QUESTION_MARK_SELECTED = 10, QUESTION_MARK = 11;
+
+using AsyncTask = std::function<void()>;
 
 int getGameLevel() {
     int level = 0;
@@ -85,11 +89,53 @@ void solve(Game& game, int w, int h, int) {
     }
 }
 
+class ShortcutTask {
+  public:
+    ShortcutTask(int x, int y, Game* game, std::queue<AsyncTask>* taskQueue)
+        : x0(x), y0(y), game(game), taskQueue(taskQueue) {}
+
+    void operator()() const {
+        int width = game->width();
+        int height = game->height();
+
+        int x = x0;
+        int y = y0;
+
+        int cellsLeft = width * height;
+        bool hasChanges = false;
+
+        while (cellsLeft > 0 && !hasChanges) {
+            hasChanges |= game->shortcut(x, y);
+            --cellsLeft;
+
+            ++x;
+            if (x == width) {
+                ++y;
+                x = 0;
+            }
+            if (y == height) {
+                y = 0;
+            }
+        }
+
+        if (hasChanges) {
+            taskQueue->push(ShortcutTask(x, y, game, taskQueue));
+        }
+    }
+
+  private:
+    int x0;
+    int y0;
+    Game* game;
+    std::queue<AsyncTask>* taskQueue;
+};
+
 int main() {
     initscr();
     keypad(stdscr, true);
     noecho();
     start_color();
+    halfdelay(1);
 
     int level = getGameLevel();
 
@@ -125,9 +171,19 @@ int main() {
     int godmode_idx = insert(root, "godmode");
     int area_idx = insert(root, "area");
     int autowin_idx = insert(root, "autowin");
+    int shortcut_idx = insert(root, "shortcut");
+    int hint_idx = insert(root, "hint");
     Trie* FSM = root;
 
+    std::queue<AsyncTask> async_tasks;
+
     while (!game.win() && !game.lose() && !q_pressed) {
+        if (!async_tasks.empty()) {
+            AsyncTask task = async_tasks.front();
+            async_tasks.pop();
+            task();
+        }
+
         int ch = first_loop ? 0 : getch();
         first_loop = false;
         switch (ch) {
@@ -146,6 +202,9 @@ int main() {
         case ' ':
             game.open(cur_x, cur_y);
             break;
+        case '!':
+            game.shortcut(cur_x, cur_y);
+            break;
         case 'F':
         case 'f':
             game.changeState(cur_x, cur_y);
@@ -161,12 +220,21 @@ int main() {
                 for (int code : codes) {
                     if (code == godmode_idx) {
                         godmode = !godmode;
-                    }
-                    if (code == area_idx) {
+                    } else if (code == area_idx) {
                         highlight_area = !highlight_area;
-                    }
-                    if (code == autowin_idx) {
+                    } else if (code == autowin_idx) {
                         solve(game, width, height, flags);
+                    } else if (code == shortcut_idx) {
+                        async_tasks.push(
+                            ShortcutTask(cur_x, cur_y, &game, &async_tasks));
+                    } else if (code == hint_idx) {
+                        if (game.isBomb(cur_x, cur_y)) {
+                            while (game.cell(cur_x, cur_y) != 'F') {
+                                game.changeState(cur_x, cur_y);
+                            }
+                        } else {
+                            game.open(cur_x, cur_y);
+                        }
                     }
                 }
             }
@@ -258,7 +326,7 @@ int main() {
     }
 
     if (!q_pressed) {
-        getch();
+        while (getch() < 0) {}
     }
     endwin();
     return 0;
